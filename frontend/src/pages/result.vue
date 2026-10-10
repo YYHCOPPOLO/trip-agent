@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import type { NavDay, NavSection } from '@/components/trip/TripSideNav.vue'
 import type { Attraction, TripPlan } from '@/types'
-import { ArrowLeft, ArrowUp, ClipboardList, CloudSun, MapPinned, MapPlus, Pencil, Save, Wallet, X } from '@lucide/vue'
+import { ArrowLeft, ArrowUp, CalendarDays, ClipboardList, CloudSun, Landmark, MapPinned, MapPlus, Pencil, Save, Sparkles, Wallet, X } from '@lucide/vue'
 import { useEventListener, useThrottleFn, useWindowScroll } from '@vueuse/core'
 import { storeToRefs } from 'pinia'
 import { computed, nextTick, onMounted, ref, useTemplateRef } from 'vue'
@@ -16,9 +16,8 @@ import TripOverview from '@/components/trip/TripOverview.vue'
 import TripSideNav from '@/components/trip/TripSideNav.vue'
 import TripWeather from '@/components/trip/TripWeather.vue'
 import { Accordion } from '@/components/ui/accordion'
-import { Button } from '@/components/ui/button'
-import { Empty, EmptyContent, EmptyDescription, EmptyHeader, EmptyMedia, EmptyTitle } from '@/components/ui/empty'
 import { useTripExport } from '@/composables/useTripExport'
+import { formatDateShort } from '@/lib/trip'
 import { useTripPlanStore } from '@/stores/trip'
 
 const router = useRouter()
@@ -34,6 +33,10 @@ const contentRef = useTemplateRef<HTMLElement>('content')
 const mapRef = useTemplateRef<InstanceType<typeof TripMap>>('map')
 
 const hasWeather = computed(() => (tripPlan.value?.weather_info?.length ?? 0) > 0)
+
+const attractionCount = computed(() =>
+  (tripPlan.value?.days ?? []).reduce((sum, day) => sum + day.attractions.length, 0),
+)
 
 const navSections = computed<NavSection[]>(() => {
   const sections: NavSection[] = [{ key: 'overview', label: '行程概览', icon: ClipboardList }]
@@ -85,7 +88,7 @@ const updateActiveSection = useThrottleFn(() => {
   let current = sectionOrder.value[0] ?? 'overview'
   for (const key of sectionOrder.value) {
     const element = document.getElementById(key)
-    if (element && element.getBoundingClientRect().top <= 140)
+    if (element && element.getBoundingClientRect().top <= 160)
       current = key
   }
   // 滚动到底部时高亮最后一个区域
@@ -196,103 +199,209 @@ const { exporting, exportAsImage, exportAsPDF } = useTripExport({
     }
   },
 })
+
+function expandAll() {
+  openDays.value = navDays.value.map(d => d.key)
+}
+
+function collapseAll() {
+  openDays.value = []
+}
 </script>
 
 <template>
-  <div class="mx-auto max-w-7xl px-4 py-6 sm:px-6 sm:py-8 lg:px-8">
+  <div>
     <template v-if="tripPlan">
-      <!-- 页面头部 -->
-      <div class="mb-6 flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
-        <Button variant="ghost" class="-ml-2.5 w-fit text-muted-foreground" @click="goBack">
-          <ArrowLeft />
-          返回首页
-        </Button>
-        <div class="flex flex-wrap items-center gap-2">
-          <template v-if="!editMode">
-            <Button variant="outline" @click="toggleEditMode">
-              <Pencil />
-              编辑行程
-            </Button>
-            <TripExportMenu :exporting="exporting" @image="exportAsImage" @pdf="exportAsPDF" />
-          </template>
-          <template v-else>
-            <Button @click="saveChanges">
-              <Save />
-              保存修改
-            </Button>
-            <Button variant="outline" @click="cancelEdit">
-              <X />
-              取消编辑
-            </Button>
-          </template>
+      <!-- ================= Hero ================= -->
+      <section class="relative isolate overflow-hidden bg-[oklch(0.2_0.03_240)] pt-28 pb-28 sm:pt-32 sm:pb-32">
+        <img src="/images/hero.jpg" alt="" aria-hidden="true" class="absolute inset-0 -z-20 size-full animate-ken-burns object-cover object-[center_60%]">
+        <div aria-hidden="true" class="absolute inset-0 -z-10 bg-gradient-to-r from-[oklch(0.15_0.03_250/0.92)] via-[oklch(0.15_0.03_250/0.65)] to-[oklch(0.15_0.03_250/0.25)]" />
+        <div aria-hidden="true" class="absolute inset-x-0 bottom-0 -z-10 h-40 bg-gradient-to-t from-background to-transparent" />
+        <div aria-hidden="true" class="grain absolute inset-0 -z-10" />
+
+        <div class="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
+          <button
+            id="back-home"
+            type="button"
+            class="inline-flex animate-fade-up items-center gap-1.5 text-sm text-white/70 transition-colors hover:text-white"
+            @click="goBack"
+          >
+            <ArrowLeft class="size-4" />
+            返回首页
+          </button>
+
+          <div class="mt-6 flex flex-col gap-8 lg:flex-row lg:items-end lg:justify-between">
+            <div class="min-w-0">
+              <p class="animate-fade-up text-xs font-semibold tracking-[0.3em] text-[oklch(0.85_0.12_70)] uppercase [animation-delay:60ms]">
+                Your Journey
+              </p>
+              <h1 class="mt-3 animate-fade-up font-display leading-none font-black tracking-tight text-white [animation-delay:120ms]">
+                <span class="block text-5xl sm:text-7xl lg:text-8xl">{{ tripPlan.city }}</span>
+                <span class="mt-3 block text-2xl font-bold text-white/85 sm:text-3xl">
+                  {{ tripPlan.days.length }} 日<span class="text-gradient-sunset">旅行计划</span>
+                </span>
+              </h1>
+              <div class="mt-6 flex animate-fade-up flex-wrap items-center gap-2 text-sm text-white/85 [animation-delay:180ms]">
+                <span class="glass-dark inline-flex items-center gap-1.5 rounded-full px-3 py-1.5">
+                  <CalendarDays class="size-4" />
+                  {{ formatDateShort(tripPlan.start_date) }} — {{ formatDateShort(tripPlan.end_date) }}
+                </span>
+                <span class="glass-dark inline-flex items-center gap-1.5 rounded-full px-3 py-1.5">
+                  <Landmark class="size-4" />
+                  {{ attractionCount }} 个景点
+                </span>
+                <span v-if="tripPlan.budget" class="glass-dark inline-flex items-center gap-1.5 rounded-full px-3 py-1.5">
+                  <Wallet class="size-4" />
+                  约 ¥{{ Number(tripPlan.budget.total ?? 0).toLocaleString('zh-CN') }}
+                </span>
+              </div>
+            </div>
+
+            <div class="flex animate-fade-up flex-wrap items-center gap-2 [animation-delay:240ms]">
+              <template v-if="!editMode">
+                <button
+                  id="edit-trip"
+                  type="button"
+                  class="glass-dark inline-flex h-10 items-center gap-2 rounded-full px-4 text-sm font-medium text-white transition-colors hover:bg-white/15"
+                  @click="toggleEditMode"
+                >
+                  <Pencil class="size-4" />
+                  编辑行程
+                </button>
+                <TripExportMenu :exporting="exporting" @image="exportAsImage" @pdf="exportAsPDF" />
+                <button
+                  id="new-trip"
+                  type="button"
+                  class="btn-sunset inline-flex h-10 items-center gap-2 rounded-full px-4 text-sm font-semibold"
+                  @click="goBack"
+                >
+                  <Sparkles class="size-4" />
+                  再规划一次
+                </button>
+              </template>
+              <template v-else>
+                <button
+                  type="button"
+                  class="btn-sunset inline-flex h-10 items-center gap-2 rounded-full px-4 text-sm font-semibold"
+                  @click="saveChanges"
+                >
+                  <Save class="size-4" />
+                  保存修改
+                </button>
+                <button
+                  type="button"
+                  class="glass-dark inline-flex h-10 items-center gap-2 rounded-full px-4 text-sm font-medium text-white transition-colors hover:bg-white/15"
+                  @click="cancelEdit"
+                >
+                  <X class="size-4" />
+                  取消编辑
+                </button>
+              </template>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <div class="relative z-10 mx-auto -mt-16 max-w-7xl px-4 sm:px-6 lg:px-8">
+        <!-- 移动端导航 -->
+        <div class="glass sticky top-16 z-30 -mx-4 mb-4 rounded-none border-x-0 px-4 py-2 lg:hidden">
+          <TripSideNav horizontal :sections="navSections" :days="navDays" :active="activeSection" @navigate="scrollToSection" />
+        </div>
+
+        <div class="flex gap-8">
+          <!-- 侧边导航 -->
+          <aside class="hidden w-56 shrink-0 lg:block">
+            <div class="sticky top-24">
+              <TripSideNav :sections="navSections" :days="navDays" :active="activeSection" @navigate="scrollToSection" />
+            </div>
+          </aside>
+
+          <!-- 主内容区 -->
+          <div ref="content" class="min-w-0 flex-1 space-y-6">
+            <div class="grid gap-6 xl:grid-cols-5">
+              <div :class="tripPlan.budget ? 'xl:col-span-3' : 'xl:col-span-5'">
+                <TripOverview :plan="tripPlan" />
+              </div>
+              <div v-if="tripPlan.budget" class="xl:col-span-2">
+                <TripBudget :budget="tripPlan.budget" />
+              </div>
+            </div>
+
+            <TripMap ref="map" :plan="tripPlan" />
+
+            <!-- 每日行程:可折叠 -->
+            <section class="space-y-4 pt-2">
+              <div class="flex flex-wrap items-end justify-between gap-3">
+                <div>
+                  <p class="text-[10px] font-semibold tracking-[0.24em] text-sunset uppercase">
+                    Itinerary
+                  </p>
+                  <h2 class="font-display text-2xl font-bold tracking-tight sm:text-3xl">
+                    每日行程
+                  </h2>
+                </div>
+                <div class="flex items-center gap-1 rounded-full border bg-card p-1 text-xs" data-export-ignore>
+                  <span class="px-2 text-muted-foreground">共 {{ tripPlan.days.length }} 天</span>
+                  <button type="button" class="rounded-full px-3 py-1.5 font-medium transition-colors hover:bg-muted" @click="expandAll">
+                    全部展开
+                  </button>
+                  <button type="button" class="rounded-full px-3 py-1.5 font-medium transition-colors hover:bg-muted" @click="collapseAll">
+                    全部收起
+                  </button>
+                </div>
+              </div>
+              <Accordion v-model="openDays" type="multiple" class="space-y-4">
+                <TripDayPanel
+                  v-for="(day, index) in tripPlan.days"
+                  :key="index"
+                  :day="day"
+                  :index="index"
+                  :edit-mode="editMode"
+                  :photos="attractionPhotos"
+                  :photos-loading="photosLoading"
+                  @move-attraction="(attrIndex, direction) => moveAttraction(index, attrIndex, direction)"
+                  @delete-attraction="(attrIndex) => deleteAttraction(index, attrIndex)"
+                  @update-attraction="(attrIndex, patch) => updateAttraction(index, attrIndex, patch)"
+                />
+              </Accordion>
+            </section>
+
+            <TripWeather v-if="hasWeather" :weather="tripPlan.weather_info" />
+          </div>
         </div>
       </div>
 
+      <!-- 编辑模式浮动操作条 -->
       <Transition
-        enter-active-class="transition duration-200"
-        enter-from-class="-translate-y-1 opacity-0"
-        leave-active-class="transition duration-150"
-        leave-to-class="opacity-0"
+        enter-active-class="transition duration-300 ease-out"
+        enter-from-class="translate-y-6 opacity-0"
+        leave-active-class="transition duration-200 ease-in"
+        leave-to-class="translate-y-6 opacity-0"
       >
-        <div v-if="editMode" class="mb-6 flex items-center gap-2 rounded-lg border border-primary/30 bg-primary/5 px-4 py-3 text-sm text-primary">
-          <Pencil class="size-4 shrink-0" />
-          编辑模式:可调整景点顺序、删除景点或修改景点信息,完成后点击“保存修改”。
+        <div
+          v-if="editMode"
+          class="glass fixed inset-x-4 bottom-5 z-40 mx-auto flex max-w-xl items-center gap-3 rounded-full py-2 pr-2 pl-5 shadow-2xl shadow-black/20"
+          role="region"
+          aria-label="编辑模式操作"
+        >
+          <span class="relative flex size-2.5 shrink-0">
+            <span class="absolute inline-flex size-full animate-ping rounded-full bg-sunset opacity-75" />
+            <span class="relative inline-flex size-2.5 rounded-full bg-sunset" />
+          </span>
+          <p class="min-w-0 flex-1 truncate text-sm">
+            <span class="font-semibold">编辑模式</span>
+            <span class="hidden text-muted-foreground sm:inline"> · 调整顺序、删除或修改景点</span>
+          </p>
+          <button type="button" class="inline-flex h-9 items-center gap-1.5 rounded-full px-3 text-sm font-medium text-muted-foreground transition-colors hover:bg-muted hover:text-foreground" @click="cancelEdit">
+            <X class="size-4" />
+            取消
+          </button>
+          <button type="button" class="btn-sunset inline-flex h-9 items-center gap-1.5 rounded-full px-4 text-sm font-semibold" @click="saveChanges">
+            <Save class="size-4" />
+            保存
+          </button>
         </div>
       </Transition>
-
-      <!-- 移动端导航 -->
-      <div class="sticky top-16 z-30 -mx-4 mb-4 border-b bg-background/85 px-4 py-2 backdrop-blur lg:hidden">
-        <TripSideNav horizontal :sections="navSections" :days="navDays" :active="activeSection" @navigate="scrollToSection" />
-      </div>
-
-      <div class="flex gap-8">
-        <!-- 侧边导航 -->
-        <aside class="hidden w-52 shrink-0 lg:block">
-          <div class="sticky top-24">
-            <TripSideNav :sections="navSections" :days="navDays" :active="activeSection" @navigate="scrollToSection" />
-          </div>
-        </aside>
-
-        <!-- 主内容区 -->
-        <div ref="content" class="min-w-0 flex-1 space-y-6">
-          <!-- 顶部信息区:左侧概览+预算,右侧地图 -->
-          <div class="grid gap-6 xl:grid-cols-5">
-            <div class="space-y-6 xl:col-span-2">
-              <TripOverview :plan="tripPlan" />
-              <TripBudget v-if="tripPlan.budget" :budget="tripPlan.budget" />
-            </div>
-            <div class="xl:col-span-3">
-              <TripMap ref="map" :plan="tripPlan" />
-            </div>
-          </div>
-
-          <!-- 每日行程:可折叠 -->
-          <section class="space-y-3">
-            <div class="flex items-end justify-between gap-4">
-              <h2 class="text-lg font-semibold tracking-tight">
-                每日行程
-              </h2>
-              <span class="text-sm text-muted-foreground">共 {{ tripPlan.days.length }} 天</span>
-            </div>
-            <Accordion v-model="openDays" type="multiple" class="space-y-3">
-              <TripDayPanel
-                v-for="(day, index) in tripPlan.days"
-                :key="index"
-                :day="day"
-                :index="index"
-                :edit-mode="editMode"
-                :photos="attractionPhotos"
-                :photos-loading="photosLoading"
-                @move-attraction="(attrIndex, direction) => moveAttraction(index, attrIndex, direction)"
-                @delete-attraction="(attrIndex) => deleteAttraction(index, attrIndex)"
-                @update-attraction="(attrIndex, patch) => updateAttraction(index, attrIndex, patch)"
-              />
-            </Accordion>
-          </section>
-
-          <TripWeather v-if="hasWeather" :weather="tripPlan.weather_info" />
-        </div>
-      </div>
 
       <!-- 回到顶部按钮 -->
       <Transition
@@ -301,31 +410,43 @@ const { exporting, exportAsImage, exportAsPDF } = useTripExport({
         leave-active-class="transition duration-150"
         leave-to-class="translate-y-2 opacity-0"
       >
-        <Button
-          v-if="showBackTop"
-          size="icon-lg"
-          class="fixed right-5 bottom-6 z-40 rounded-full shadow-lg shadow-primary/30"
+        <button
+          v-if="showBackTop && !editMode"
+          id="back-to-top"
+          type="button"
+          class="fixed right-5 bottom-6 z-40 flex size-11 items-center justify-center rounded-full bg-foreground text-background shadow-xl transition-transform hover:-translate-y-0.5"
           aria-label="回到顶部"
           @click="backToTop"
         >
-          <ArrowUp />
-        </Button>
+          <ArrowUp class="size-5" />
+        </button>
       </Transition>
     </template>
 
-    <Empty v-else class="my-12 border border-dashed bg-card/50 py-16">
-      <EmptyHeader>
-        <EmptyMedia variant="icon">
-          <MapPlus />
-        </EmptyMedia>
-        <EmptyTitle>没有找到旅行计划数据</EmptyTitle>
-        <EmptyDescription>暂无旅行计划数据,请先创建行程</EmptyDescription>
-      </EmptyHeader>
-      <EmptyContent>
-        <Button @click="goBack">
+    <!-- ================= 空状态 ================= -->
+    <section v-else class="relative isolate flex min-h-[80svh] items-center justify-center overflow-hidden bg-[oklch(0.2_0.03_240)] px-4 pt-24 pb-16">
+      <img src="/images/hero.jpg" alt="" aria-hidden="true" class="absolute inset-0 -z-20 size-full object-cover opacity-60 blur-sm">
+      <div aria-hidden="true" class="absolute inset-0 -z-10 bg-gradient-to-b from-[oklch(0.15_0.03_250/0.85)] to-[oklch(0.15_0.03_250/0.6)]" />
+      <div class="glass-dark max-w-md animate-fade-up rounded-[2rem] p-8 text-center text-white sm:p-10">
+        <span class="mx-auto flex size-16 animate-float items-center justify-center rounded-2xl bg-white/10">
+          <MapPlus class="size-8" />
+        </span>
+        <h1 class="mt-6 font-display text-2xl font-bold sm:text-3xl">
+          没有找到旅行计划数据
+        </h1>
+        <p class="mt-2 text-sm text-white/70">
+          暂无旅行计划数据,请先创建行程
+        </p>
+        <button
+          id="empty-create"
+          type="button"
+          class="btn-sunset mt-7 inline-flex h-12 items-center gap-2 rounded-full px-6 text-sm font-semibold"
+          @click="goBack"
+        >
+          <Sparkles class="size-4" />
           返回首页创建行程
-        </Button>
-      </EmptyContent>
-    </Empty>
+        </button>
+      </div>
+    </section>
   </div>
 </template>

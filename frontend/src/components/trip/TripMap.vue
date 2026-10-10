@@ -2,12 +2,11 @@
 import type { Attraction, TripPlan } from '@/types'
 import type { AMapMap, AMapMarker, AMapNamespace, LngLatTuple } from '@/types/amap'
 import AMapLoader from '@amap/amap-jsapi-loader'
-import { MapPinned, MapPinOff } from '@lucide/vue'
+import { Loader2, MapPinned, MapPinOff } from '@lucide/vue'
 import { nextTick, onBeforeUnmount, onMounted, ref } from 'vue'
 import { toast } from 'vue-sonner'
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
-import { Skeleton } from '@/components/ui/skeleton'
-import { escapeHtml } from '@/lib/trip'
+import { dayColor, escapeHtml } from '@/lib/trip'
+import TripSection from './TripSection.vue'
 
 const props = defineProps<{
   plan: TripPlan
@@ -18,15 +17,8 @@ interface MappedAttraction extends Attraction {
   attrIndex: number
 }
 
-// 每天路线使用的颜色(与主题色协调)
-const DAY_COLORS = ['#0d9488', '#2563eb', '#d97706', '#db2777', '#7c3aed', '#059669', '#dc2626']
-
 const status = ref<'loading' | 'ready' | 'error'>('loading')
 let map: AMapMap | null = null
-
-function dayColor(dayIndex: number): string {
-  return DAY_COLORS[dayIndex % DAY_COLORS.length] ?? '#0d9488'
-}
 
 function collectAttractions(): MappedAttraction[] {
   const result: MappedAttraction[] = []
@@ -82,21 +74,21 @@ function addAttractionMarkers(AMap: AMapNamespace) {
       position: toLngLat(attraction),
       title: attraction.name,
       anchor: 'bottom-center',
-      content: `<div style="display:flex;align-items:center;justify-content:center;width:28px;height:28px;border-radius:9999px;background:${color};color:#fff;font-size:12px;font-weight:600;border:2px solid #fff;box-shadow:0 2px 6px rgba(0,0,0,.25);">${index + 1}</div>`,
+      content: `<div style="display:flex;align-items:center;justify-content:center;width:30px;height:30px;border-radius:9999px 9999px 9999px 4px;transform:rotate(-45deg);background:${color};border:2px solid #fff;box-shadow:0 6px 14px -4px rgba(0,0,0,.45);"><span style="transform:rotate(45deg);color:#fff;font-size:12px;font-weight:700;font-family:'Plus Jakarta Sans',sans-serif;">${index + 1}</span></div>`,
     })
 
     // 创建信息窗口
     const infoWindow = new AMap.InfoWindow({
       content: `
-        <div style="padding:4px 2px;max-width:260px;font-size:13px;line-height:1.6;color:#18181b;">
-          <div style="font-weight:600;font-size:14px;margin-bottom:4px;">${escapeHtml(attraction.name)}</div>
-          <div><strong>地址:</strong> ${escapeHtml(attraction.address)}</div>
-          <div><strong>游览时长:</strong> ${escapeHtml(attraction.visit_duration)}分钟</div>
-          <div style="color:#52525b;"><strong>描述:</strong> ${escapeHtml(attraction.description)}</div>
-          <div style="margin-top:6px;color:${color};font-weight:600;">第${attraction.dayIndex + 1}天 景点${attraction.attrIndex + 1}</div>
+        <div style="padding:6px 4px;max-width:270px;font-size:13px;line-height:1.65;color:#1f2937;font-family:'Plus Jakarta Sans','PingFang SC','Microsoft YaHei',sans-serif;">
+          <div style="display:inline-block;padding:2px 8px;border-radius:999px;background:${color}1a;color:${color};font-size:11px;font-weight:700;">第${attraction.dayIndex + 1}天 · 景点${attraction.attrIndex + 1}</div>
+          <div style="font-weight:700;font-size:15px;margin:6px 0 4px;">${escapeHtml(attraction.name)}</div>
+          <div style="color:#6b7280;">📍 ${escapeHtml(attraction.address)}</div>
+          <div style="color:#6b7280;">⏱ 游览约 ${escapeHtml(attraction.visit_duration)} 分钟</div>
+          <div style="margin-top:4px;color:#374151;">${escapeHtml(attraction.description)}</div>
         </div>
       `,
-      offset: new AMap.Pixel(0, -30),
+      offset: new AMap.Pixel(0, -34),
     })
 
     // 点击标记显示信息窗口
@@ -165,29 +157,39 @@ defineExpose({ refresh })
 </script>
 
 <template>
-  <Card id="map" class="h-full gap-4" data-export-card>
-    <CardHeader>
-      <CardTitle class="flex items-center gap-2 text-base">
-        <MapPinned class="size-4 text-primary" />
-        景点地图
-      </CardTitle>
-      <CardDescription>点击标记查看景点详情,不同颜色代表不同日期的路线</CardDescription>
-    </CardHeader>
-    <CardContent class="flex-1">
-      <div class="relative h-[340px] overflow-hidden rounded-lg border bg-muted sm:h-[420px] lg:h-full lg:min-h-[420px]">
-        <div id="amap-container" class="absolute inset-0" />
-        <div v-if="status === 'loading'" class="absolute inset-0" data-export-ignore>
-          <Skeleton class="size-full rounded-none" />
-        </div>
-        <div
-          v-else-if="status === 'error'"
-          class="absolute inset-0 flex flex-col items-center justify-center gap-2 bg-muted text-sm text-muted-foreground"
+  <TripSection id="map" :icon="MapPinned" eyebrow="Route Map" title="景点地图" description="点击标记查看景点详情,不同颜色代表不同日期的路线">
+    <template #actions>
+      <ul class="flex flex-wrap items-center gap-1.5">
+        <li
+          v-for="(day, index) in plan.days"
+          :key="index"
+          class="inline-flex items-center gap-1.5 rounded-full border bg-background px-2.5 py-1 text-xs font-medium"
         >
-          <MapPinOff class="size-8" />
-          <span>地图加载失败</span>
-          <span class="text-xs">请检查 VITE_AMAP_WEB_JS_KEY 配置</span>
-        </div>
+          <span class="size-2.5 rounded-full" :style="{ background: dayColor(index) }" />
+          第{{ day.day_index + 1 }}天
+        </li>
+      </ul>
+    </template>
+    <div class="relative h-[360px] overflow-hidden rounded-2xl border bg-muted sm:h-[460px] lg:h-[520px]">
+      <div id="amap-container" class="absolute inset-0" />
+      <div
+        v-if="status === 'loading'"
+        class="absolute inset-0 flex flex-col items-center justify-center gap-3 bg-[linear-gradient(110deg,var(--muted)_30%,var(--surface)_50%,var(--muted)_70%)] bg-[length:200%_100%] animate-shimmer text-sm text-muted-foreground"
+        data-export-ignore
+      >
+        <Loader2 class="size-6 animate-spin text-primary" />
+        正在加载地图…
       </div>
-    </CardContent>
-  </Card>
+      <div
+        v-else-if="status === 'error'"
+        class="absolute inset-0 flex flex-col items-center justify-center gap-2 bg-muted text-sm text-muted-foreground"
+      >
+        <span class="flex size-14 items-center justify-center rounded-2xl bg-background shadow-sm">
+          <MapPinOff class="size-6" />
+        </span>
+        <span class="mt-1 font-medium text-foreground">地图加载失败</span>
+        <span class="text-xs">请检查 VITE_AMAP_WEB_JS_KEY 配置</span>
+      </div>
+    </div>
+  </TripSection>
 </template>

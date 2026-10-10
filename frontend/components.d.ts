@@ -72,6 +72,7 @@ declare module 'vue' {
     NativeSelect: typeof import('./src/components/ui/native-select/NativeSelect.vue')['default']
     NativeSelectOptGroup: typeof import('./src/components/ui/native-select/NativeSelectOptGroup.vue')['default']
     NativeSelectOption: typeof import('./src/components/ui/native-select/NativeSelectOption.vue')['default']
+    PlanningOverlay: typeof import('./src/components/trip/PlanningOverlay.vue')['default']
     Popover: typeof import('./src/components/ui/popover/Popover.vue')['default']
     PopoverAnchor: typeof import('./src/components/ui/popover/PopoverAnchor.vue')['default']
     PopoverContent: typeof import('./src/components/ui/popover/PopoverContent.vue')['default']
@@ -123,6 +124,7 @@ declare module 'vue' {
     TripMap: typeof import('./src/components/trip/TripMap.vue')['default']
     TripMeals: typeof import('./src/components/trip/TripMeals.vue')['default']
     TripOverview: typeof import('./src/components/trip/TripOverview.vue')['default']
+    TripSection: typeof import('./src/components/trip/TripSection.vue')['default']
     TripSideNav: typeof import('./src/components/trip/TripSideNav.vue')['default']
     TripWeather: typeof import('./src/components/trip/TripWeather.vue')['default']
   }

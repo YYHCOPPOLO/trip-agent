@@ -2,11 +2,9 @@
 import type { Attraction } from '@/types'
 import { ArrowDown, ArrowUp, Clock, ImageOff, MapPin, Star, Ticket, Trash2 } from '@lucide/vue'
 import { ref, watch } from 'vue'
-import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
-import { Skeleton } from '@/components/ui/skeleton'
 import { Textarea } from '@/components/ui/textarea'
 import { Tooltip, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip'
 import { getPlaceholderGradient } from '@/lib/trip'
@@ -19,6 +17,8 @@ const props = defineProps<{
   editMode: boolean
   photo?: string
   photoLoading?: boolean
+  /** 所属日期的主题色 */
+  color?: string
 }>()
 
 const emit = defineEmits<{
@@ -47,68 +47,91 @@ function clampDuration() {
   if (clamped !== props.attraction.visit_duration)
     emit('update', { visit_duration: clamped })
 }
+
+function formatDuration(minutes: number) {
+  if (!minutes)
+    return '—'
+  if (minutes < 60)
+    return `${minutes} 分钟`
+  const h = Math.floor(minutes / 60)
+  const m = minutes % 60
+  return m ? `${h} 小时 ${m} 分` : `${h} 小时`
+}
 </script>
 
 <template>
   <article
-    class="group/attraction flex flex-col overflow-hidden rounded-xl border bg-card transition-all duration-200 hover:-translate-y-0.5 hover:shadow-lg hover:shadow-foreground/5"
+    :class="cn(
+      'group/attraction relative flex flex-col overflow-hidden rounded-2xl border bg-card transition-all duration-300 sm:flex-row',
+      editMode ? 'ring-1 ring-primary/20' : 'hover:-translate-y-0.5 hover:shadow-xl hover:shadow-foreground/[0.06]',
+    )"
     data-export-card
   >
     <!-- 景点图片 -->
-    <div class="relative h-40 overflow-hidden bg-muted sm:h-44">
-      <Skeleton v-if="photoLoading && !photo" class="size-full rounded-none" />
+    <div class="relative h-44 shrink-0 overflow-hidden bg-muted sm:h-auto sm:min-h-44 sm:w-56 lg:w-64">
+      <div
+        v-if="photoLoading && !photo"
+        class="size-full animate-shimmer bg-[linear-gradient(110deg,var(--muted)_30%,var(--surface)_50%,var(--muted)_70%)] bg-[length:200%_100%]"
+      />
       <img
         v-else-if="photo && !imageFailed"
         :src="photo"
         :alt="attraction.name"
         loading="lazy"
         referrerpolicy="no-referrer"
-        class="size-full object-cover transition-transform duration-500 group-hover/attraction:scale-105"
+        class="absolute inset-0 size-full object-cover transition-transform duration-700 group-hover/attraction:scale-110"
         @error="imageFailed = true"
       >
       <div
         v-else
-        :class="cn('flex size-full flex-col items-center justify-center gap-1 bg-gradient-to-br p-4 text-center text-white', getPlaceholderGradient(index))"
+        :class="cn('absolute inset-0 flex flex-col items-center justify-center gap-1 bg-gradient-to-br p-4 text-center text-white', getPlaceholderGradient(index))"
       >
         <ImageOff v-if="imageFailed" class="size-5 opacity-80" />
-        <span class="line-clamp-2 text-lg font-semibold drop-shadow-sm">{{ attraction.name }}</span>
+        <span class="line-clamp-2 font-display text-xl font-bold drop-shadow-sm">{{ attraction.name }}</span>
         <span v-if="imageFailed" class="text-xs opacity-80">图片加载失败</span>
       </div>
+      <div class="pointer-events-none absolute inset-0 bg-gradient-to-t from-black/45 via-transparent to-transparent" />
 
-      <span class="absolute top-3 left-3 flex size-7 items-center justify-center rounded-full bg-background/90 text-xs font-bold text-foreground shadow-sm backdrop-blur">
-        {{ index + 1 }}
-      </span>
       <span
         v-if="attraction.ticket_price"
-        class="absolute top-3 right-3 inline-flex items-center gap-1 rounded-full bg-foreground/80 px-2.5 py-1 text-xs font-semibold text-background backdrop-blur"
+        class="absolute bottom-3 left-3 inline-flex items-center gap-1 rounded-full bg-white/90 px-2.5 py-1 text-xs font-bold text-slate-900 shadow-sm backdrop-blur"
       >
         <Ticket class="size-3" />
         ¥{{ attraction.ticket_price }}
       </span>
+      <span
+        v-if="attraction.rating"
+        class="absolute top-3 right-3 inline-flex items-center gap-0.5 rounded-full bg-black/45 px-2 py-0.5 text-xs font-semibold text-white backdrop-blur"
+      >
+        <Star class="size-3 fill-amber-400 text-amber-400" />
+        {{ attraction.rating }}
+      </span>
     </div>
 
-    <div class="flex flex-1 flex-col gap-3 p-4">
-      <div class="flex items-start justify-between gap-2">
+    <div class="flex min-w-0 flex-1 flex-col gap-3 p-4 sm:p-5">
+      <div class="flex items-start justify-between gap-3">
         <div class="min-w-0">
-          <h4 class="truncate font-semibold" :title="attraction.name">
-            {{ attraction.name }}
-          </h4>
-          <div class="mt-1 flex flex-wrap items-center gap-1.5">
-            <Badge v-if="attraction.category" variant="secondary" class="font-normal">
+          <div class="flex flex-wrap items-center gap-2">
+            <span
+              class="inline-flex h-5 items-center rounded-full px-2 text-[10px] font-bold tracking-wider text-white uppercase"
+              :style="{ background: color ?? 'var(--primary)' }"
+            >
+              Stop {{ String(index + 1).padStart(2, '0') }}
+            </span>
+            <span v-if="attraction.category" class="rounded-full bg-muted px-2 py-0.5 text-[11px] text-muted-foreground">
               {{ attraction.category }}
-            </Badge>
-            <span v-if="attraction.rating" class="inline-flex items-center gap-0.5 text-xs font-medium text-amber-600">
-              <Star class="size-3.5 fill-current" />
-              {{ attraction.rating }}
             </span>
           </div>
+          <h4 class="mt-1.5 truncate font-display text-lg font-bold" :title="attraction.name">
+            {{ attraction.name }}
+          </h4>
         </div>
 
         <!-- 编辑模式下的操作按钮 -->
         <div v-if="editMode" class="flex shrink-0 items-center gap-1" data-export-ignore>
           <Tooltip>
             <TooltipTrigger as-child>
-              <Button size="icon-sm" variant="outline" :disabled="index === 0" aria-label="上移" @click="emit('move', 'up')">
+              <Button size="icon-sm" variant="outline" class="rounded-full" :disabled="index === 0" aria-label="上移" @click="emit('move', 'up')">
                 <ArrowUp />
               </Button>
             </TooltipTrigger>
@@ -116,7 +139,7 @@ function clampDuration() {
           </Tooltip>
           <Tooltip>
             <TooltipTrigger as-child>
-              <Button size="icon-sm" variant="outline" :disabled="index === total - 1" aria-label="下移" @click="emit('move', 'down')">
+              <Button size="icon-sm" variant="outline" class="rounded-full" :disabled="index === total - 1" aria-label="下移" @click="emit('move', 'down')">
                 <ArrowDown />
               </Button>
             </TooltipTrigger>
@@ -124,7 +147,7 @@ function clampDuration() {
           </Tooltip>
           <Tooltip>
             <TooltipTrigger as-child>
-              <Button size="icon-sm" variant="destructive" aria-label="删除" @click="emit('remove')">
+              <Button size="icon-sm" variant="destructive" class="rounded-full" aria-label="删除" @click="emit('remove')">
                 <Trash2 />
               </Button>
             </TooltipTrigger>
@@ -134,10 +157,10 @@ function clampDuration() {
       </div>
 
       <!-- 编辑模式下可编辑的字段 -->
-      <div v-if="editMode" class="space-y-3">
+      <div v-if="editMode" class="grid gap-3 sm:grid-cols-[1fr_140px]">
         <div class="space-y-1.5">
           <Label class="text-xs text-muted-foreground">地址</Label>
-          <Input :model-value="attraction.address" class="h-8" @update:model-value="emit('update', { address: String($event) })" />
+          <Input :model-value="attraction.address" class="h-9 rounded-xl" @update:model-value="emit('update', { address: String($event) })" />
         </div>
         <div class="space-y-1.5">
           <Label class="text-xs text-muted-foreground">游览时长(分钟)</Label>
@@ -146,31 +169,33 @@ function clampDuration() {
             :min="MIN_DURATION"
             :max="MAX_DURATION"
             :model-value="attraction.visit_duration"
-            class="h-8"
+            class="h-9 rounded-xl"
             @update:model-value="updateDuration"
             @blur="clampDuration"
           />
         </div>
-        <div class="space-y-1.5">
+        <div class="space-y-1.5 sm:col-span-2">
           <Label class="text-xs text-muted-foreground">描述</Label>
-          <Textarea :model-value="attraction.description" rows="2" class="min-h-16 text-sm" @update:model-value="emit('update', { description: String($event) })" />
+          <Textarea :model-value="attraction.description" rows="2" class="min-h-16 rounded-xl text-sm" @update:model-value="emit('update', { description: String($event) })" />
         </div>
       </div>
 
       <!-- 查看模式 -->
-      <div v-else class="space-y-2 text-sm">
-        <p class="flex items-start gap-2 text-muted-foreground">
-          <MapPin class="mt-0.5 size-4 shrink-0" />
-          <span class="min-w-0 break-words">{{ attraction.address }}</span>
-        </p>
-        <p class="flex items-center gap-2 text-muted-foreground">
-          <Clock class="size-4 shrink-0" />
-          游览时长 {{ attraction.visit_duration }} 分钟
-        </p>
-        <p class="leading-relaxed text-pretty">
+      <template v-else>
+        <p class="line-clamp-3 text-sm leading-relaxed text-pretty text-foreground/80">
           {{ attraction.description }}
         </p>
-      </div>
+        <div class="mt-auto flex flex-wrap items-center gap-x-4 gap-y-1.5 border-t pt-3 text-xs text-muted-foreground">
+          <span class="inline-flex items-center gap-1.5">
+            <Clock class="size-3.5" />
+            {{ formatDuration(attraction.visit_duration) }}
+          </span>
+          <span class="inline-flex min-w-0 items-center gap-1.5">
+            <MapPin class="size-3.5 shrink-0" />
+            <span class="truncate" :title="attraction.address">{{ attraction.address }}</span>
+          </span>
+        </div>
+      </template>
     </div>
   </article>
 </template>
