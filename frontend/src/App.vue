@@ -1,6 +1,11 @@
 <script setup lang="ts">
+import { Toaster } from '@/components/ui/sonner'
+import { TooltipProvider } from '@/components/ui/tooltip'
 </script>
 
 <template>
-  <RouterView />
+  <TooltipProvider :delay-duration="200">
+    <RouterView />
+  </TooltipProvider>
+  <Toaster position="top-center" rich-colors close-button />
 </template>
