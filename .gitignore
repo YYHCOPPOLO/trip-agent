@@ -1,0 +1,26 @@
+# 只忽略仓库根目录。不写 docs/，否则 frontend/docs 也会被忽略。
+/docs/
+
+# 上一版完整实现，只读对照。
+/reference/
+
+# Secrets
+.env
+.env.local
+.env.*.local
+!.env.example
+
+# Dependencies and build output
+node_modules/
+dist/
+.venv/
+venv/
+__pycache__/
+.ruff_cache/
+.pytest_cache/
+*.log
+
+# Editor and OS
+.idea/
+.DS_Store
+Thumbs.db
