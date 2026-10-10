@@ -92,4 +92,3 @@ export interface TripPlanResponse {
   message: string
   data?: TripPlan
 }
-

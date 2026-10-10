@@ -13,6 +13,7 @@ const apiClient = axios.create({
 
 apiClient.interceptors.request.use(
   (config) => {
+    // eslint-disable-next-line no-console
     console.log('发送请求:', config.method?.toUpperCase(), config.url)
     return config
   },
@@ -24,6 +25,7 @@ apiClient.interceptors.request.use(
 
 apiClient.interceptors.response.use(
   (response) => {
+    // eslint-disable-next-line no-console
     console.log('收到响应:', response.status, response.config.url)
     return response
   },

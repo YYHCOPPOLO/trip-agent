@@ -1,4 +1,5 @@
 import { spawnSync } from 'node:child_process'
+import process from 'node:process'
 
 function run(command, args) {
   const result = spawnSync(command, args, {

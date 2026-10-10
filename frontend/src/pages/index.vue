@@ -1,260 +1,193 @@
-<template>
-  <div class="home-container">
-    <!-- 背景装饰 -->
-    <div class="bg-decoration">
-      <div class="circle circle-1"></div>
-      <div class="circle circle-2"></div>
-      <div class="circle circle-3"></div>
-    </div>
-
-    <!-- 页面标题 -->
-    <div class="page-header">
-      <div class="icon-wrapper">
-        <span class="icon">✈️</span>
-      </div>
-      <h1 class="page-title">智能旅行助手</h1>
-      <p class="page-subtitle">基于AI的个性化旅行规划,让每一次出行都完美无忧</p>
-    </div>
-
-    <a-card class="form-card" :bordered="false">
-      <a-form
-        :model="formData"
-        layout="vertical"
-        @finish="handleSubmit"
-      >
-        <!-- 第一步:目的地和日期 -->
-        <div class="form-section">
-          <div class="section-header">
-            <span class="section-icon">📍</span>
-            <span class="section-title">目的地与日期</span>
-          </div>
-
-          <a-row :gutter="24">
-            <a-col :span="8">
-              <a-form-item name="city" :rules="[{ required: true, message: '请输入目的地城市' }]">
-                <template #label>
-                  <span class="form-label">目的地城市</span>
-                </template>
-                <a-input
-                  v-model:value="formData.city"
-                  placeholder="例如: 北京"
-                  size="large"
-                  class="custom-input"
-                >
-                  <template #prefix>
-                    <span style="color: #1890ff;">🏙️</span>
-                  </template>
-                </a-input>
-              </a-form-item>
-            </a-col>
-            <a-col :span="6">
-              <a-form-item name="start_date" :rules="[{ required: true, message: '请选择开始日期' }]">
-                <template #label>
-                  <span class="form-label">开始日期</span>
-                </template>
-                <a-date-picker
-                  v-model:value="formData.start_date"
-                  style="width: 100%"
-                  size="large"
-                  class="custom-input"
-                  placeholder="选择日期"
-                />
-              </a-form-item>
-            </a-col>
-            <a-col :span="6">
-              <a-form-item name="end_date" :rules="[{ required: true, message: '请选择结束日期' }]">
-                <template #label>
-                  <span class="form-label">结束日期</span>
-                </template>
-                <a-date-picker
-                  v-model:value="formData.end_date"
-                  style="width: 100%"
-                  size="large"
-                  class="custom-input"
-                  placeholder="选择日期"
-                />
-              </a-form-item>
-            </a-col>
-            <a-col :span="4">
-              <a-form-item>
-                <template #label>
-                  <span class="form-label">旅行天数</span>
-                </template>
-                <div class="days-display-compact">
-                  <span class="days-value">{{ formData.travel_days }}</span>
-                  <span class="days-unit">天</span>
-                </div>
-              </a-form-item>
-            </a-col>
-          </a-row>
-        </div>
-
-        <!-- 第二步:偏好设置 -->
-        <div class="form-section">
-          <div class="section-header">
-            <span class="section-icon">⚙️</span>
-            <span class="section-title">偏好设置</span>
-          </div>
-
-          <a-row :gutter="24">
-            <a-col :span="8">
-              <a-form-item name="transportation">
-                <template #label>
-                  <span class="form-label">交通方式</span>
-                </template>
-                <a-select v-model:value="formData.transportation" size="large" class="custom-select">
-                  <a-select-option value="公共交通">🚇 公共交通</a-select-option>
-                  <a-select-option value="自驾">🚗 自驾</a-select-option>
-                  <a-select-option value="步行">🚶 步行</a-select-option>
-                  <a-select-option value="混合">🔀 混合</a-select-option>
-                </a-select>
-              </a-form-item>
-            </a-col>
-            <a-col :span="8">
-              <a-form-item name="accommodation">
-                <template #label>
-                  <span class="form-label">住宿偏好</span>
-                </template>
-                <a-select v-model:value="formData.accommodation" size="large" class="custom-select">
-                  <a-select-option value="经济型酒店">💰 经济型酒店</a-select-option>
-                  <a-select-option value="舒适型酒店">🏨 舒适型酒店</a-select-option>
-                  <a-select-option value="豪华酒店">⭐ 豪华酒店</a-select-option>
-                  <a-select-option value="民宿">🏡 民宿</a-select-option>
-                </a-select>
-              </a-form-item>
-            </a-col>
-            <a-col :span="8">
-              <a-form-item name="preferences">
-                <template #label>
-                  <span class="form-label">旅行偏好</span>
-                </template>
-                <div class="preference-tags">
-                  <a-checkbox-group v-model:value="formData.preferences" class="custom-checkbox-group">
-                    <a-checkbox value="历史文化" class="preference-tag">🏛️ 历史文化</a-checkbox>
-                    <a-checkbox value="自然风光" class="preference-tag">🏞️ 自然风光</a-checkbox>
-                    <a-checkbox value="美食" class="preference-tag">🍜 美食</a-checkbox>
-                    <a-checkbox value="购物" class="preference-tag">🛍️ 购物</a-checkbox>
-                    <a-checkbox value="艺术" class="preference-tag">🎨 艺术</a-checkbox>
-                    <a-checkbox value="休闲" class="preference-tag">☕ 休闲</a-checkbox>
-                  </a-checkbox-group>
-                </div>
-              </a-form-item>
-            </a-col>
-          </a-row>
-        </div>
-
-        <!-- 第三步:额外要求 -->
-        <div class="form-section">
-          <div class="section-header">
-            <span class="section-icon">💬</span>
-            <span class="section-title">额外要求</span>
-          </div>
-
-          <a-form-item name="free_text_input">
-            <a-textarea
-              v-model:value="formData.free_text_input"
-              placeholder="请输入您的额外要求,例如:想去看升旗、需要无障碍设施、对海鲜过敏等..."
-              :rows="3"
-              size="large"
-              class="custom-textarea"
-            />
-          </a-form-item>
-        </div>
-
-        <!-- 提交按钮 -->
-        <a-form-item>
-          <a-button
-            type="primary"
-            html-type="submit"
-            :loading="loading"
-            size="large"
-            block
-            class="submit-button"
-          >
-            <template v-if="!loading">
-              <span class="button-icon">🚀</span>
-              <span>开始规划我的旅行</span>
-            </template>
-            <template v-else>
-              <span>正在生成中...</span>
-            </template>
-          </a-button>
-        </a-form-item>
-
-        <!-- 加载进度条 -->
-        <a-form-item v-if="loading">
-          <div class="loading-container">
-            <a-progress
-              :percent="loadingProgress"
-              status="active"
-              :stroke-color="{
-                '0%': '#667eea',
-                '100%': '#764ba2',
-              }"
-              :stroke-width="10"
-            />
-            <p class="loading-status">
-              {{ loadingStatus }}
-            </p>
-          </div>
-        </a-form-item>
-      </a-form>
-    </a-card>
-  </div>
-</template>
-
 <script setup lang="ts">
+import type { DateRange } from 'reka-ui'
+import type { Component } from 'vue'
 import type { TripFormData } from '@/types'
-import type { Dayjs } from 'dayjs'
-import { message } from 'ant-design-vue'
-import { reactive, ref, watch } from 'vue'
+import { getLocalTimeZone, today } from '@internationalized/date'
+import {
+  BedDouble,
+  Building2,
+  CalendarDays,
+  CarFront,
+  ClipboardList,
+  CloudSun,
+  Coffee,
+  Footprints,
+  Gem,
+  Hotel,
+  House,
+  Landmark,
+  Loader2,
+  MapPin,
+  MessageSquareText,
+  Mountain,
+  Palette,
+  Search,
+  ShoppingBag,
+  Shuffle,
+  SlidersHorizontal,
+  Sparkles,
+  TrainFront,
+  UtensilsCrossed,
+  Wallet,
+} from '@lucide/vue'
+import { useMediaQuery } from '@vueuse/core'
+import { computed, reactive, ref, shallowRef, watch } from 'vue'
 import { useRouter } from 'vue-router'
+import { toast } from 'vue-sonner'
 import { generateTripPlan } from '@/api/trip'
+import { Button } from '@/components/ui/button'
+import { Card, CardContent } from '@/components/ui/card'
+import { Input } from '@/components/ui/input'
+import { Label } from '@/components/ui/label'
+import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover'
+import { Progress } from '@/components/ui/progress'
+import { RangeCalendar } from '@/components/ui/range-calendar'
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
+import { Textarea } from '@/components/ui/textarea'
+import { getErrorMessage } from '@/lib/trip'
+import { cn } from '@/lib/utils'
 import { useTripPlanStore } from '@/stores/trip'
+
+interface Option {
+  value: string
+  label: string
+  icon: Component
+}
+
+const MAX_DAYS = 30
 
 const router = useRouter()
 const tripStore = useTripPlanStore()
 const loading = ref(false)
 const loadingProgress = ref(0)
 const loadingStatus = ref('')
+const datePickerOpen = ref(false)
+const isDesktop = useMediaQuery('(min-width: 768px)')
 
-type TripFormState = Omit<TripFormData, 'start_date' | 'end_date'> & {
-  start_date: Dayjs | null
-  end_date: Dayjs | null
-}
+const transportOptions: Option[] = [
+  { value: '公共交通', label: '公共交通', icon: TrainFront },
+  { value: '自驾', label: '自驾', icon: CarFront },
+  { value: '步行', label: '步行', icon: Footprints },
+  { value: '混合', label: '混合', icon: Shuffle },
+]
+
+const accommodationOptions: Option[] = [
+  { value: '经济型酒店', label: '经济型酒店', icon: Wallet },
+  { value: '舒适型酒店', label: '舒适型酒店', icon: Hotel },
+  { value: '豪华酒店', label: '豪华酒店', icon: Gem },
+  { value: '民宿', label: '民宿', icon: House },
+]
+
+const preferenceOptions: Option[] = [
+  { value: '历史文化', label: '历史文化', icon: Landmark },
+  { value: '自然风光', label: '自然风光', icon: Mountain },
+  { value: '美食', label: '美食', icon: UtensilsCrossed },
+  { value: '购物', label: '购物', icon: ShoppingBag },
+  { value: '艺术', label: '艺术', icon: Palette },
+  { value: '休闲', label: '休闲', icon: Coffee },
+]
+
+const features = [
+  { icon: Search, title: '智能景点推荐', desc: '结合兴趣偏好筛选值得去的地方' },
+  { icon: CloudSun, title: '实时天气参考', desc: '按出行日期提供天气预报' },
+  { icon: BedDouble, title: '住宿与预算', desc: '推荐酒店并估算整体花费' },
+]
+
+type TripFormState = Omit<TripFormData, 'start_date' | 'end_date'>
 
 const formData = reactive<TripFormState>({
   city: '',
-  start_date: null,
-  end_date: null,
   travel_days: 1,
   transportation: '公共交通',
   accommodation: '经济型酒店',
   preferences: [],
-  free_text_input: ''
+  free_text_input: '',
+})
+
+const dateRange = shallowRef<DateRange>({ start: undefined, end: undefined })
+const errors = reactive<{ city?: string, dates?: string }>({})
+const todayDate = today(getLocalTimeZone())
+
+const dateLabel = computed(() => {
+  const { start, end } = dateRange.value
+  if (!start)
+    return ''
+  return end ? `${start.toString()} 至 ${end.toString()}` : `${start.toString()} 至 …`
 })
 
 // 监听日期变化,自动计算旅行天数
-watch([() => formData.start_date, () => formData.end_date], ([start, end]) => {
+watch(dateRange, (range) => {
+  const { start, end } = range
   if (start && end) {
-    const days = end.diff(start, 'day') + 1
-    if (days > 0 && days <= 30) {
+    const days = end.compare(start) + 1
+    if (days > 0 && days <= MAX_DAYS) {
       formData.travel_days = days
-    } else if (days > 30) {
-      message.warning('旅行天数不能超过30天')
-      formData.end_date = null
-    } else {
-      message.warning('结束日期不能早于开始日期')
-      formData.end_date = null
+      errors.dates = undefined
+      datePickerOpen.value = false
+    }
+    else if (days > MAX_DAYS) {
+      toast.warning(`旅行天数不能超过${MAX_DAYS}天`)
+      dateRange.value = { start, end: undefined }
+    }
+    else {
+      toast.warning('结束日期不能早于开始日期')
+      dateRange.value = { start, end: undefined }
     }
   }
 })
 
-const handleSubmit = async () => {
-  if (!formData.start_date || !formData.end_date) {
-    message.error('请选择日期')
+watch(() => formData.city, (city) => {
+  if (city.trim())
+    errors.city = undefined
+})
+
+function togglePreference(value: string) {
+  const index = formData.preferences.indexOf(value)
+  if (index === -1)
+    formData.preferences.push(value)
+  else
+    formData.preferences.splice(index, 1)
+}
+
+function validate(): boolean {
+  errors.city = formData.city.trim() ? undefined : '请输入目的地城市'
+  const { start, end } = dateRange.value
+  if (!start)
+    errors.dates = '请选择开始日期'
+  else if (!end)
+    errors.dates = '请选择结束日期'
+  else
+    errors.dates = undefined
+  return !errors.city && !errors.dates
+}
+
+function updateLoadingStatus(progress: number) {
+  if (progress <= 30)
+    loadingStatus.value = '正在搜索景点...'
+  else if (progress <= 50)
+    loadingStatus.value = '正在查询天气...'
+  else if (progress <= 70)
+    loadingStatus.value = '正在推荐酒店...'
+  else
+    loadingStatus.value = '正在生成行程计划...'
+}
+
+const loadingSteps = [
+  { at: 10, label: '搜索景点', icon: Search },
+  { at: 40, label: '查询天气', icon: CloudSun },
+  { at: 60, label: '推荐酒店', icon: Building2 },
+  { at: 80, label: '生成行程', icon: ClipboardList },
+]
+
+async function handleSubmit() {
+  if (!validate()) {
+    if (errors.dates && !errors.city)
+      toast.error('请选择日期')
     return
   }
+  const { start, end } = dateRange.value
+  if (!start || !end)
+    return
 
   loading.value = true
   loadingProgress.value = 0
@@ -264,54 +197,46 @@ const handleSubmit = async () => {
   const progressInterval = setInterval(() => {
     if (loadingProgress.value < 90) {
       loadingProgress.value += 10
-
-      // 更新状态文本
-      if (loadingProgress.value <= 30) {
-        loadingStatus.value = '🔍 正在搜索景点...'
-      } else if (loadingProgress.value <= 50) {
-        loadingStatus.value = '🌤️ 正在查询天气...'
-      } else if (loadingProgress.value <= 70) {
-        loadingStatus.value = '🏨 正在推荐酒店...'
-      } else {
-        loadingStatus.value = '📋 正在生成行程计划...'
-      }
+      updateLoadingStatus(loadingProgress.value)
     }
   }, 500)
 
   try {
     const requestData: TripFormData = {
-      city: formData.city,
-      start_date: formData.start_date.format('YYYY-MM-DD'),
-      end_date: formData.end_date.format('YYYY-MM-DD'),
+      city: formData.city.trim(),
+      start_date: start.toString(),
+      end_date: end.toString(),
       travel_days: formData.travel_days,
       transportation: formData.transportation,
       accommodation: formData.accommodation,
-      preferences: formData.preferences,
-      free_text_input: formData.free_text_input
+      preferences: [...formData.preferences],
+      free_text_input: formData.free_text_input,
     }
 
     const response = await generateTripPlan(requestData)
 
     clearInterval(progressInterval)
     loadingProgress.value = 100
-    loadingStatus.value = '✅ 完成!'
+    loadingStatus.value = '完成!'
 
     if (response.success && response.data) {
       tripStore.setPlan(response.data)
-
-      message.success('旅行计划生成成功!')
+      toast.success('旅行计划生成成功!')
 
       // 短暂延迟后跳转
       setTimeout(() => {
         router.push('/result')
       }, 500)
-    } else {
-      message.error(response.message || '生成失败')
     }
-  } catch (error: any) {
+    else {
+      toast.error(response.message || '生成失败')
+    }
+  }
+  catch (error) {
     clearInterval(progressInterval)
-    message.error(error.message || '生成旅行计划失败,请稍后重试')
-  } finally {
+    toast.error(getErrorMessage(error, '生成旅行计划失败,请稍后重试'))
+  }
+  finally {
     setTimeout(() => {
       loading.value = false
       loadingProgress.value = 0
@@ -321,335 +246,271 @@ const handleSubmit = async () => {
 }
 </script>
 
-<style scoped>
-.home-container {
-  min-height: 100vh;
-  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-  padding: 60px 20px;
-  position: relative;
-  overflow: hidden;
-}
+<template>
+  <div class="relative isolate overflow-hidden">
+    <!-- 背景装饰 -->
+    <div aria-hidden="true" class="pointer-events-none absolute inset-x-0 top-0 -z-10 h-[520px] bg-[radial-gradient(60%_60%_at_50%_0%,color-mix(in_oklab,var(--primary)_16%,transparent),transparent)]" />
+    <div aria-hidden="true" class="pointer-events-none absolute inset-x-0 top-0 -z-10 h-[520px] bg-[linear-gradient(to_right,color-mix(in_oklab,var(--foreground)_5%,transparent)_1px,transparent_1px),linear-gradient(to_bottom,color-mix(in_oklab,var(--foreground)_5%,transparent)_1px,transparent_1px)] bg-[size:44px_44px] [mask-image:radial-gradient(ellipse_at_top,black,transparent_70%)]" />
 
-/* 背景装饰 */
-.bg-decoration {
-  position: absolute;
-  top: 0;
-  left: 0;
-  width: 100%;
-  height: 100%;
-  pointer-events: none;
-  overflow: hidden;
-}
+    <div class="mx-auto max-w-5xl px-4 pt-12 pb-16 sm:px-6 sm:pt-16 lg:px-8">
+      <!-- 页面标题 -->
+      <section class="mx-auto max-w-2xl text-center">
+        <span class="inline-flex items-center gap-1.5 rounded-full border border-primary/20 bg-primary/10 px-3 py-1 text-xs font-medium text-primary">
+          <Sparkles class="size-3.5" />
+          AI 行程规划
+        </span>
+        <h1 class="mt-5 text-4xl font-bold tracking-tight text-balance sm:text-5xl">
+          智能旅行助手
+        </h1>
+        <p class="mt-4 text-base text-pretty text-muted-foreground sm:text-lg">
+          基于AI的个性化旅行规划,让每一次出行都完美无忧
+        </p>
+      </section>
 
-.circle {
-  position: absolute;
-  border-radius: 50%;
-  background: rgba(255, 255, 255, 0.1);
-  animation: float 20s infinite ease-in-out;
-}
+      <Card class="mt-10 gap-0 py-0 shadow-lg shadow-primary/5">
+        <CardContent class="p-0">
+          <form class="divide-y divide-border" novalidate @submit.prevent="handleSubmit">
+            <!-- 第一步:目的地和日期 -->
+            <section class="space-y-5 p-5 sm:p-8">
+              <div class="flex items-center gap-3">
+                <span class="flex size-8 items-center justify-center rounded-lg bg-primary/10 text-primary">
+                  <MapPin class="size-4" />
+                </span>
+                <div>
+                  <h2 class="text-base font-semibold">
+                    目的地与日期
+                  </h2>
+                  <p class="text-xs text-muted-foreground">
+                    告诉我们你想去哪里、什么时候出发
+                  </p>
+                </div>
+              </div>
 
-.circle-1 {
-  width: 300px;
-  height: 300px;
-  top: -100px;
-  left: -100px;
-  animation-delay: 0s;
-}
+              <div class="grid gap-5 md:grid-cols-12">
+                <div class="space-y-2 md:col-span-4">
+                  <Label for="city">目的地城市</Label>
+                  <div class="relative">
+                    <Building2 class="pointer-events-none absolute top-1/2 left-3 size-4 -translate-y-1/2 text-muted-foreground" />
+                    <Input
+                      id="city"
+                      v-model="formData.city"
+                      placeholder="例如: 北京"
+                      autocomplete="off"
+                      class="h-11 pl-9"
+                      :aria-invalid="!!errors.city || undefined"
+                    />
+                  </div>
+                  <p v-if="errors.city" class="text-xs text-destructive">
+                    {{ errors.city }}
+                  </p>
+                </div>
 
-.circle-2 {
-  width: 200px;
-  height: 200px;
-  top: 50%;
-  right: -50px;
-  animation-delay: 5s;
-}
+                <div class="space-y-2 md:col-span-6">
+                  <Label for="trip-dates">开始日期 / 结束日期</Label>
+                  <Popover v-model:open="datePickerOpen">
+                    <PopoverTrigger as-child>
+                      <Button
+                        id="trip-dates"
+                        type="button"
+                        variant="outline"
+                        :aria-invalid="!!errors.dates || undefined"
+                        :class="cn('h-11 w-full justify-start gap-2 bg-transparent px-3 font-normal shadow-xs hover:bg-muted/50', !dateLabel && 'text-muted-foreground')"
+                      >
+                        <CalendarDays class="size-4 text-muted-foreground" />
+                        <span class="truncate">{{ dateLabel || '选择日期' }}</span>
+                      </Button>
+                    </PopoverTrigger>
+                    <PopoverContent class="w-auto p-0" align="start">
+                      <RangeCalendar
+                        v-model="dateRange"
+                        locale="zh-CN"
+                        :week-starts-on="1"
+                        :number-of-months="isDesktop ? 2 : 1"
+                        :placeholder="dateRange.start ?? todayDate"
+                        initial-focus
+                      />
+                    </PopoverContent>
+                  </Popover>
+                  <p v-if="errors.dates" class="text-xs text-destructive">
+                    {{ errors.dates }}
+                  </p>
+                </div>
 
-.circle-3 {
-  width: 150px;
-  height: 150px;
-  bottom: -50px;
-  left: 30%;
-  animation-delay: 10s;
-}
+                <div class="space-y-2 md:col-span-2">
+                  <Label>旅行天数</Label>
+                  <div class="flex h-11 items-center justify-center gap-1 rounded-md bg-primary/10 text-primary">
+                    <span class="text-2xl font-bold tabular-nums">{{ formData.travel_days }}</span>
+                    <span class="text-sm">天</span>
+                  </div>
+                </div>
+              </div>
+            </section>
 
-@keyframes float {
-  0%, 100% {
-    transform: translateY(0) rotate(0deg);
-  }
-  50% {
-    transform: translateY(-30px) rotate(180deg);
-  }
-}
+            <!-- 第二步:偏好设置 -->
+            <section class="space-y-5 p-5 sm:p-8">
+              <div class="flex items-center gap-3">
+                <span class="flex size-8 items-center justify-center rounded-lg bg-primary/10 text-primary">
+                  <SlidersHorizontal class="size-4" />
+                </span>
+                <div>
+                  <h2 class="text-base font-semibold">
+                    偏好设置
+                  </h2>
+                  <p class="text-xs text-muted-foreground">
+                    选择出行方式、住宿和感兴趣的主题
+                  </p>
+                </div>
+              </div>
 
-/* 页面标题 */
-.page-header {
-  text-align: center;
-  margin-bottom: 50px;
-  animation: fadeInDown 0.8s ease-out;
-  position: relative;
-  z-index: 1;
-}
+              <div class="grid gap-5 md:grid-cols-2">
+                <div class="space-y-2">
+                  <Label for="transportation">交通方式</Label>
+                  <Select v-model="formData.transportation">
+                    <SelectTrigger id="transportation" class="h-11! w-full">
+                      <SelectValue />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem v-for="option in transportOptions" :key="option.value" :value="option.value">
+                        <component :is="option.icon" class="size-4 text-muted-foreground" />
+                        {{ option.label }}
+                      </SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
+                <div class="space-y-2">
+                  <Label for="accommodation">住宿偏好</Label>
+                  <Select v-model="formData.accommodation">
+                    <SelectTrigger id="accommodation" class="h-11! w-full">
+                      <SelectValue />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem v-for="option in accommodationOptions" :key="option.value" :value="option.value">
+                        <component :is="option.icon" class="size-4 text-muted-foreground" />
+                        {{ option.label }}
+                      </SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
+              </div>
 
-.icon-wrapper {
-  margin-bottom: 20px;
-}
+              <div class="space-y-2">
+                <Label>旅行偏好</Label>
+                <div class="flex flex-wrap gap-2" role="group" aria-label="旅行偏好">
+                  <button
+                    v-for="option in preferenceOptions"
+                    :key="option.value"
+                    type="button"
+                    role="checkbox"
+                    :aria-checked="formData.preferences.includes(option.value)"
+                    :class="cn(
+                      'inline-flex h-9 items-center gap-1.5 rounded-full border px-3.5 text-sm font-medium transition-all outline-none focus-visible:ring-3 focus-visible:ring-ring/50 active:scale-[0.97]',
+                      formData.preferences.includes(option.value)
+                        ? 'border-primary bg-primary text-primary-foreground shadow-sm shadow-primary/30'
+                        : 'border-border bg-background text-foreground hover:border-primary/40 hover:bg-accent',
+                    )"
+                    @click="togglePreference(option.value)"
+                  >
+                    <component :is="option.icon" class="size-4" />
+                    {{ option.label }}
+                  </button>
+                </div>
+              </div>
+            </section>
 
-.icon {
-  font-size: 80px;
-  display: inline-block;
-  animation: bounce 2s infinite;
-}
+            <!-- 第三步:额外要求 -->
+            <section class="space-y-5 p-5 sm:p-8">
+              <div class="flex items-center gap-3">
+                <span class="flex size-8 items-center justify-center rounded-lg bg-primary/10 text-primary">
+                  <MessageSquareText class="size-4" />
+                </span>
+                <div>
+                  <h2 class="text-base font-semibold">
+                    额外要求
+                  </h2>
+                  <p class="text-xs text-muted-foreground">
+                    可选,写下任何特别的需求
+                  </p>
+                </div>
+              </div>
+              <Textarea
+                v-model="formData.free_text_input"
+                placeholder="请输入您的额外要求,例如:想去看升旗、需要无障碍设施、对海鲜过敏等..."
+                rows="3"
+                class="min-h-24 resize-y"
+              />
+            </section>
 
-@keyframes bounce {
-  0%, 100% {
-    transform: translateY(0);
-  }
-  50% {
-    transform: translateY(-20px);
-  }
-}
+            <!-- 提交按钮 -->
+            <section class="space-y-5 bg-muted/40 p-5 sm:p-8">
+              <Button
+                type="submit"
+                size="lg"
+                :disabled="loading"
+                class="h-12 w-full gap-2 rounded-xl text-base shadow-md shadow-primary/25 transition-all hover:-translate-y-0.5 hover:shadow-lg hover:shadow-primary/30"
+              >
+                <template v-if="!loading">
+                  <Sparkles class="size-5" />
+                  <span>开始规划我的旅行</span>
+                </template>
+                <template v-else>
+                  <Loader2 class="size-5 animate-spin" />
+                  <span>正在生成中...</span>
+                </template>
+              </Button>
 
-.page-title {
-  font-size: 56px;
-  font-weight: 800;
-  color: #ffffff;
-  margin-bottom: 16px;
-  text-shadow: 3px 3px 6px rgba(0, 0, 0, 0.3);
-  letter-spacing: 2px;
-}
+              <!-- 加载进度条 -->
+              <Transition
+                enter-active-class="transition duration-300 ease-out"
+                enter-from-class="-translate-y-1 opacity-0"
+                leave-active-class="transition duration-200 ease-in"
+                leave-to-class="opacity-0"
+              >
+                <div v-if="loading" class="space-y-4 rounded-xl border border-dashed border-primary/40 bg-background p-5">
+                  <div class="flex items-center justify-between gap-4 text-sm">
+                    <span class="font-medium text-primary">{{ loadingStatus }}</span>
+                    <span class="tabular-nums text-muted-foreground">{{ loadingProgress }}%</span>
+                  </div>
+                  <Progress :model-value="loadingProgress" class="h-2" />
+                  <ol class="grid grid-cols-2 gap-2 sm:grid-cols-4">
+                    <li
+                      v-for="step in loadingSteps"
+                      :key="step.label"
+                      :class="cn(
+                        'flex items-center gap-2 rounded-lg px-2.5 py-2 text-xs transition-colors',
+                        loadingProgress >= step.at ? 'bg-primary/10 text-primary' : 'text-muted-foreground',
+                      )"
+                    >
+                      <component :is="step.icon" class="size-3.5 shrink-0" />
+                      {{ step.label }}
+                    </li>
+                  </ol>
+                </div>
+              </Transition>
+            </section>
+          </form>
+        </CardContent>
+      </Card>
 
-.page-subtitle {
-  font-size: 20px;
-  color: rgba(255, 255, 255, 0.95);
-  margin: 0;
-  font-weight: 300;
-}
-
-/* 表单卡片 */
-.form-card {
-  max-width: 1400px;
-  margin: 0 auto;
-  border-radius: 24px;
-  box-shadow: 0 30px 80px rgba(0, 0, 0, 0.4);
-  animation: fadeInUp 0.8s ease-out;
-  position: relative;
-  z-index: 1;
-  backdrop-filter: blur(10px);
-  background: rgba(255, 255, 255, 0.98) !important;
-}
-
-/* 表单分区 */
-.form-section {
-  margin-bottom: 32px;
-  padding: 24px;
-  background: linear-gradient(135deg, #f5f7fa 0%, #ffffff 100%);
-  border-radius: 16px;
-  border: 1px solid #e8e8e8;
-  transition: all 0.3s ease;
-}
-
-.form-section:hover {
-  box-shadow: 0 8px 24px rgba(102, 126, 234, 0.15);
-  transform: translateY(-2px);
-}
-
-.section-header {
-  display: flex;
-  align-items: center;
-  margin-bottom: 20px;
-  padding-bottom: 12px;
-  border-bottom: 2px solid #667eea;
-}
-
-.section-icon {
-  font-size: 24px;
-  margin-right: 12px;
-}
-
-.section-title {
-  font-size: 18px;
-  font-weight: 600;
-  color: #333;
-}
-
-/* 表单标签 */
-.form-label {
-  font-size: 15px;
-  font-weight: 500;
-  color: #555;
-}
-
-/* 自定义输入框 */
-.custom-input :deep(.ant-input),
-.custom-input :deep(.ant-picker) {
-  border-radius: 12px;
-  border: 2px solid #e8e8e8;
-  transition: all 0.3s ease;
-}
-
-.custom-input :deep(.ant-input:hover),
-.custom-input :deep(.ant-picker:hover) {
-  border-color: #667eea;
-}
-
-.custom-input :deep(.ant-input:focus),
-.custom-input :deep(.ant-picker-focused) {
-  border-color: #667eea;
-  box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
-}
-
-/* 自定义选择框 */
-.custom-select :deep(.ant-select-selector) {
-  border-radius: 12px !important;
-  border: 2px solid #e8e8e8 !important;
-  transition: all 0.3s ease;
-}
-
-.custom-select:hover :deep(.ant-select-selector) {
-  border-color: #667eea !important;
-}
-
-.custom-select :deep(.ant-select-focused .ant-select-selector) {
-  border-color: #667eea !important;
-  box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1) !important;
-}
-
-/* 天数显示 - 紧凑版 */
-.days-display-compact {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  height: 40px;
-  padding: 8px 16px;
-  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-  border-radius: 12px;
-  color: white;
-}
-
-.days-display-compact .days-value {
-  font-size: 24px;
-  font-weight: 700;
-  margin-right: 4px;
-}
-
-.days-display-compact .days-unit {
-  font-size: 14px;
-}
-
-/* 偏好标签 */
-.preference-tags {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 8px;
-}
-
-.custom-checkbox-group {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 8px;
-  width: 100%;
-}
-
-.preference-tag :deep(.ant-checkbox-wrapper) {
-  margin: 0 !important;
-  padding: 8px 16px;
-  border: 2px solid #e8e8e8;
-  border-radius: 20px;
-  transition: all 0.3s ease;
-  background: white;
-  font-size: 14px;
-}
-
-.preference-tag :deep(.ant-checkbox-wrapper:hover) {
-  border-color: #667eea;
-  background: #f5f7ff;
-}
-
-.preference-tag :deep(.ant-checkbox-wrapper-checked) {
-  border-color: #667eea;
-  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-  color: white;
-}
-
-/* 自定义文本域 */
-.custom-textarea :deep(.ant-input) {
-  border-radius: 12px;
-  border: 2px solid #e8e8e8;
-  transition: all 0.3s ease;
-}
-
-.custom-textarea :deep(.ant-input:hover) {
-  border-color: #667eea;
-}
-
-.custom-textarea :deep(.ant-input:focus) {
-  border-color: #667eea;
-  box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
-}
-
-/* 提交按钮 */
-.submit-button {
-  height: 56px;
-  border-radius: 28px;
-  font-size: 18px;
-  font-weight: 600;
-  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-  border: none;
-  box-shadow: 0 8px 24px rgba(102, 126, 234, 0.4);
-  transition: all 0.3s ease;
-}
-
-.submit-button:hover {
-  transform: translateY(-2px);
-  box-shadow: 0 12px 32px rgba(102, 126, 234, 0.5);
-}
-
-.submit-button:active {
-  transform: translateY(0);
-}
-
-.button-icon {
-  margin-right: 8px;
-  font-size: 20px;
-}
-
-/* 加载容器 */
-.loading-container {
-  text-align: center;
-  padding: 24px;
-  background: linear-gradient(135deg, #f5f7fa 0%, #ffffff 100%);
-  border-radius: 16px;
-  border: 2px dashed #667eea;
-}
-
-.loading-status {
-  margin-top: 16px;
-  color: #667eea;
-  font-size: 18px;
-  font-weight: 500;
-}
-
-/* 动画 */
-@keyframes fadeInDown {
-  from {
-    opacity: 0;
-    transform: translateY(-30px);
-  }
-  to {
-    opacity: 1;
-    transform: translateY(0);
-  }
-}
-
-@keyframes fadeInUp {
-  from {
-    opacity: 0;
-    transform: translateY(30px);
-  }
-  to {
-    opacity: 1;
-    transform: translateY(0);
-  }
-}
-</style>
-
+      <!-- 功能亮点 -->
+      <section class="mt-10 grid gap-4 sm:grid-cols-3">
+        <div
+          v-for="feature in features"
+          :key="feature.title"
+          class="flex items-start gap-3 rounded-xl border border-border/70 bg-card/60 p-4 transition-colors hover:bg-card"
+        >
+          <span class="flex size-9 shrink-0 items-center justify-center rounded-lg bg-primary/10 text-primary">
+            <component :is="feature.icon" class="size-4" />
+          </span>
+          <div>
+            <h3 class="text-sm font-semibold">
+              {{ feature.title }}
+            </h3>
+            <p class="mt-0.5 text-xs text-muted-foreground">
+              {{ feature.desc }}
+            </p>
+          </div>
+        </div>
+      </section>
+    </div>
+  </div>
+</template>
